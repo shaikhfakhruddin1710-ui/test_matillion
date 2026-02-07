@@ -1,1 +1,8 @@
-
+.github/
+  workflows/
+    snowflake-deploy.yml
+schemachange/
+  dbscripts/
+    V1_0_1__create_tables.sql
+    R__views.sql
+    A__grants.sql
