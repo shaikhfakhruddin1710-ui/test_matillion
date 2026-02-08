@@ -1,47 +1,49 @@
-name: Snowflake CI/CD – Option A
-
-on:
-  workflow_dispatch:
-  push:
-    branches: [ "main" ]
-    paths:
-      - "schemachange/dbscripts/**"
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
-
-      - name: Install schemachange
-        run: |
-          pip install --upgrade pip
-          pip install schemachange
-
-      - name: Deploy to Snowflake
+- name: Deploy to Snowflake (sanitize account id)
+        shell: bash
         env:
-          SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT}}
-          SNOWFLAKE_USERNAME: ${{ secrets.SNOWFLAKE_USERNAME}}
-          SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD}}
-          SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE}}
-          SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE}}
-          SNOWFLAKE_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE}}
-          SNOWFLAKE_SCHEMA: ${{ secrets.SNOWFLAKE_SCHEMA}}
+          SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+          SNOWFLAKE_USERNAME: ${{ secrets.SNOWFLAKE_USERNAME }}
+          SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+          SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
+          SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
+          SNOWFLAKE_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
+          SNOWFLAKE_SCHEMA: ${{ secrets.SNOWFLAKE_SCHEMA }}
         run: |
+          set -e
+
+          echo "Raw SNOWFLAKE_ACCOUNT='${SNOWFLAKE_ACCOUNT}'"
+
+          # --- sanitize (handles full URL or hostname or identifier) ---
+          ACCOUNT_CLEAN="${SNOWFLAKE_ACCOUNT#https://}"
+          ACCOUNT_CLEAN="${ACCOUNT_CLEAN#http://}"
+          ACCOUNT_CLEAN="${ACCOUNT_CLEAN%%/*}"
+          ACCOUNT_CLEAN="${ACCOUNT_CLEAN%.snowflakecomputing.com}"
+
+          export SNOWFLAKE_ACCOUNT="$ACCOUNT_CLEAN"
+          echo "Using cleaned SNOWFLAKE_ACCOUNT='${SNOWFLAKE_ACCOUNT}'"
+
+          # quick connectivity check (should be 200/302; not 404)
+          echo "Checking URL: https://${SNOWFLAKE_ACCOUNT}.snowflakecomputing.com"
+          curl -s -o /dev/null -w "HTTP=%{http_code}\n" "https://${SNOWFLAKE_ACCOUNT}.snowflakecomputing.com" || true
+
+          # optional: verify connection first (recommended)
+          schemachange verify \
+            -a "$SNOWFLAKE_ACCOUNT" \
+            -u "$SNOWFLAKE_USERNAME" \
+            -r "$SNOWFLAKE_ROLE" \
+            -w "$SNOWFLAKE_WAREHOUSE" \
+            -d "$SNOWFLAKE_DATABASE" \
+            -s "$SNOWFLAKE_SCHEMA"
+
+          # deploy
           schemachange \
-            -f $GITHUB_WORKSPACE/schemachange/dbscripts\
-            -a $SNOWFLAKE_ACCOUNT\
-            -u $SNOWFLAKE_USERNAME\
-            -r $SNOWFLAKE_ROLE\
-            -w $SNOWFLAKE_WAREHOUSE\
-            -d $SNOWFLAKE_DATABASE\
-            -s $SNOWFLAKE_SCHEMA\
-            -c $SNOWFLAKE_DATABASE.CHANGE_HISTORY.SCHEMACHANGE_HISTORY\
+            -f "$GITHUB_WORKSPACE/schemachange/dbscripts" \
+            -a "$SNOWFLAKE_ACCOUNT" \
+            -u "$SNOWFLAKE_USERNAME" \
+            -r "$SNOWFLAKE_ROLE" \
+            -w "$SNOWFLAKE_WAREHOUSE" \
+            -d "$SNOWFLAKE_DATABASE" \
+            -s "$SNOWFLAKE_SCHEMA" \
+            -c "$SNOWFLAKE_DATABASE.CHANGE_HISTORY.SCHEMACHANGE_HISTORY" \
             --create-change-history-table
+``
