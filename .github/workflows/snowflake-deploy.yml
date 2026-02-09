@@ -5,7 +5,7 @@ on:
   push:
     branches: [ "main" ]
     paths:
-      - "schemachange/dbscripts/V1_0_1_create_tables.sql"
+      - "schemachange/dbscripts//**"
 
 jobs:
   deploy:
