@@ -1,0 +1,25 @@
+-- DDL: Create a new schema
+CREATE SCHEMA IF NOT EXISTS DEMO_SCHEMA;
+
+-- DDL: Create a new table
+CREATE TABLE IF NOT EXISTS DEMO_SCHEMA.EMPLOYEES (
+    ID INT,
+    FIRST_NAME VARCHAR(50),
+    LAST_NAME VARCHAR(50),
+    DEPARTMENT VARCHAR(50),
+    HIRE_DATE DATE DEFAULT CURRENT_DATE()
+);
+
+-- DML: Insert initial data (Seeding)
+INSERT INTO DEMO_SCHEMA.EMPLOYEES (ID, FIRST_NAME, LAST_NAME, DEPARTMENT) 
+VALUES 
+    (1, 'John', 'Doe', 'Engineering'),
+    (2, 'Jane', 'Smith', 'Marketing'),
+    (3, 'Alice', 'Johnson', 'Sales');
+
+-- DDL: Create a view for easy reporting
+CREATE OR REPLACE VIEW DEMO_SCHEMA.EMPLOYEE_ROSTER AS
+SELECT 
+    FIRST_NAME || ' ' || LAST_NAME AS FULL_NAME,
+    DEPARTMENT
+FROM DEMO_SCHEMA.EMPLOYEES;
