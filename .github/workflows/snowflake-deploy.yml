@@ -45,3 +45,4 @@ jobs:
             -s $SNOWFLAKE_SCHEMA \
             -c $SNOWFLAKE_DATABASE.CHANGE_HISTORY.SCHEMACHANGE_HISTORY \
             --create-change-history-table
+           --change-management-manifest-path $GITHUB_WORKSPACE/schemachange/manifesto.json
