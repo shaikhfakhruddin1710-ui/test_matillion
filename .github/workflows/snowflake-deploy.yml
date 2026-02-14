@@ -1,48 +1,52 @@
-name: Snowflake CI/CD – Option A (Password)
+name: Snowflake Deploy (Manifest Controlled)
 
 on:
   workflow_dispatch:
-  push:
-    branches: [ "main" ]
-    paths:
-      - "schemachange/dbscripts//**"
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout repo
         uses: actions/checkout@v4
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
+          python-version: "3.11"
 
       - name: Install schemachange
-        run: |
-          pip install --upgrade pip
-          pip install schemachange
+        run: pip install schemachange==4.3.2
 
-      - name: Deploy Snowflake changes
+      - name: Prepare deployment folder from manifesto
+        run: |
+          mkdir -p /tmp/schemachange_run
+
+          echo "Reading manifesto.json"
+          SCRIPTS=$(jq -r '.scripts[]' schemachange/manifesto.json)
+
+          for SCRIPT in $SCRIPTS; do
+            echo "Including script: $SCRIPT"
+            cp schemachange/dbscripts/$SCRIPT /tmp/schemachange_run/
+          done
+
+          ls -l /tmp/schemachange_run
+
+      - name: Run schemachange (manifest-controlled)
         env:
           SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
-          SNOWFLAKE_USERNAME: ${{ secrets.SNOWFLAKE_USERNAME }}
+          SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
           SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
-          SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
-          SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
-          SNOWFLAKE_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
-          SNOWFLAKE_SCHEMA: ${{ secrets.SNOWFLAKE_SCHEMA }}
         run: |
-          schemachange \
-            -f $GITHUB_WORKSPACE/schemachange/dbscripts \
-            -a $SNOWFLAKE_ACCOUNT \
-            -u $SNOWFLAKE_USERNAME \
-            -r $SNOWFLAKE_ROLE \
-            -w $SNOWFLAKE_WAREHOUSE \
-            -d $SNOWFLAKE_DATABASE \
-            -s $SNOWFLAKE_SCHEMA \
-            -c $SNOWFLAKE_DATABASE.CHANGE_HISTORY.SCHEMACHANGE_HISTORY \
+          schemachange deploy \
+            --root-folder /tmp/schemachange_run \
+            --snowflake-account "$SNOWFLAKE_ACCOUNT" \
+            --snowflake-user "$SNOWFLAKE_USER" \
+            --snowflake-password "$SNOWFLAKE_PASSWORD" \
+            --snowflake-role CICD_ROLE \
+            --snowflake-warehouse CICD_WH \
+            --snowflake-database DEV_DB \
+            --snowflake-schema DEV_SCHEMA \
+            --change-history-table DEV_DB.CHANGE_HISTORY.SCHEMACHANGE_HISTORY \
             --create-change-history-table
-           --change-management-manifest-path $GITHUB_WORKSPACE/schemachange/manifesto.json
