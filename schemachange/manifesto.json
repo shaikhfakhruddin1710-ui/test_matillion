@@ -1,22 +1,8 @@
 {
   "project_name": "snowflake-deploy",
-  "schemachange_version": "3.7.0",
-  "applied_changes": [
-    {
-      "script_name": "V1.1.1__initial_setup.sql",
-      "script_type": "V",
-      "checksum": "38e5ba03b1a6d2...",
-      "status": "SUCCESS",
-      "execution_time": 4,
-      "installed_on": "2024-03-17 12:54:33"
-    },
-    {
-      "script_name": "R__create_view.sql",
-      "script_type": "R",
-      "checksum": "9fdaa7f1b2c3d4...",
-      "status": "SUCCESS",
-      "execution_time": 2,
-      "installed_on": "2024-03-17 12:54:35"
-    }
+  "schemachange_version": "4.3.2",
+  "scripts": [
+    "V1.1.1__initial_setup.sql",
+    "R__create_view.sql"
   ]
 }
