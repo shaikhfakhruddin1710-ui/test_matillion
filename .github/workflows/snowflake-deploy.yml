@@ -43,15 +43,20 @@ jobs:
       - name: Deploy using schemachange
         env:
           SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
-          SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
-          SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}  # ✅ ENV VAR ONLY
+          SNOWFLAKE_USERNAME: ${{ secrets.SNOWFLAKE_USERNAME }}
+          SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+          SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
+          SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
+          SNOWFLAKE_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
+          SNOWFLAKE_SCHEMA: ${{ secrets.SNOWFLAKE_SCHEMA }}
         run: |
-          schemachange deploy \
-            -f /tmp/schemachange_run \
-            -a "$SNOWFLAKE_ACCOUNT" \
-            -u "$SNOWFLAKE_USER" \
-            -r "CICD_ROLE" \
-            -w "CICD_WH" \
-            -d "DEMO_DB" \
-            -c "DEMO_DB.CHANGE_HISTORY.SCHEMACHANGE_HISTORY" \
+         schemachange \
+            -f $GITHUB_WORKSPACE/schemachange/dbscripts \
+            -a $SNOWFLAKE_ACCOUNT \
+            -u $SNOWFLAKE_USERNAME \
+            -r $SNOWFLAKE_ROLE \
+            -w $SNOWFLAKE_WAREHOUSE \
+            -d $SNOWFLAKE_DATABASE \
+            -s $SNOWFLAKE_SCHEMA \
+            -c $SNOWFLAKE_DATABASE.CHANGE_HISTORY.SCHEMACHANGE_HISTORY \
             --create-change-history-table
