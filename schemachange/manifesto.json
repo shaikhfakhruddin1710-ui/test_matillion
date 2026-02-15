@@ -2,7 +2,8 @@
   "project_name": "snowflake-deploy",
   "schemachange_version": "4.3.2",
   "scripts": [
-    "V1.1.1__initial_setup.sql",
-    "R__create_view.sql"
+    "V1.0.8__create_simple_table.sql",
+    "V1.0.9__insert_simple_data.sql"
+
   ]
 }
