@@ -40,7 +40,7 @@ jobs:
           echo "Scripts to be deployed:"
           ls -l /tmp/schemachange_run
 
-      - name: Deploy using schemachange
+      - name: Deploy using schemachange(manifest-only)
         env:
           SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
           SNOWFLAKE_USERNAME: ${{ secrets.SNOWFLAKE_USERNAME }}
