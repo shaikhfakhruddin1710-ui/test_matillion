@@ -6,6 +6,7 @@ on:
     branches: [ "main" ]
     paths:
       - "schemachange/dbscripts/**"
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -21,10 +22,11 @@ jobs:
 
       - name: Install schemachange
         run: |
+          set -x
           pip install --upgrade pip
           pip install schemachange
 
-      - name: Deploy Snowflake changes
+      - name: Deploy Snowflake changes (verbose)
         env:
           SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
           SNOWFLAKE_USERNAME: ${{ secrets.SNOWFLAKE_USERNAME }}
@@ -34,7 +36,14 @@ jobs:
           SNOWFLAKE_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
           SNOWFLAKE_SCHEMA: ${{ secrets.SNOWFLAKE_SCHEMA }}
         run: |
+          set -euxo pipefail
+
+          echo "🚀 Starting Snowflake deployment"
+          echo "📂 Script folder: $GITHUB_WORKSPACE/schemachange/dbscripts"
+          echo "🗄️ Target: $SNOWFLAKE_DATABASE.$SNOWFLAKE_SCHEMA"
+
           schemachange \
+            -L DEBUG \
             -f $GITHUB_WORKSPACE/schemachange/dbscripts \
             -a $SNOWFLAKE_ACCOUNT \
             -u $SNOWFLAKE_USERNAME \
@@ -44,3 +53,5 @@ jobs:
             -s $SNOWFLAKE_SCHEMA \
             -c $SNOWFLAKE_DATABASE.CHANGE_HISTORY.SCHEMACHANGE_HISTORY \
             --create-change-history-table
+
+          echo "✅ Snowflake deployment completed"
