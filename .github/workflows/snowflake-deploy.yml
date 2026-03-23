@@ -5,8 +5,7 @@ on:
   push:
     branches: [ "main" ]
     paths:
-      - "schemachange/dbscripts/**"
-
+      - "schemachange/dbscripts/Create V1.1.1__initial_setup.sql"
 jobs:
   deploy:
     runs-on: ubuntu-latest
